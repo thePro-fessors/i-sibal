@@ -1,29 +1,32 @@
 #!/usr/bin/env bash
 set -e
 
-echo "=== [3/4] UxPlay (AirPlay 서버) 설치 ==="
+echo "=== [3/4] Installing UxPlay (AirPlay Server) ==="
 
 UXPLAY_DIR="$HOME/UxPlay"
 
+UXPLAY_VERSION="v1.69" # Stable pinned version
+
 if [ -d "$UXPLAY_DIR" ]; then
-    echo ">> 기존 UxPlay 소스를 업데이트합니다..."
+    echo ">> Updating existing UxPlay source to $UXPLAY_VERSION..."
     cd "$UXPLAY_DIR"
-    git pull
+    git fetch --all --tags
+    git checkout "$UXPLAY_VERSION"
 else
-    echo ">> UxPlay 소스 저장소를 다운로드합니다..."
+    echo ">> Cloning UxPlay repository (Version: $UXPLAY_VERSION)..."
     cd "$HOME"
-    git clone https://github.com/FDH2/UxPlay.git
+    git clone --branch "$UXPLAY_VERSION" https://github.com/FDH2/UxPlay.git
     cd UxPlay
 fi
 
-echo ">> 빌드를 준비합니다..."
+echo ">> Preparing build..."
 mkdir -p build
 cd build
 cmake ..
 
-echo ">> UxPlay 컴파일 및 설치 중 (시간이 소요될 수 있습니다)..."
+echo ">> Compiling and installing UxPlay (This may take some time)..."
 make -j4
 sudo make install
 
-echo "=== 완료 ==="
-echo "UxPlay가 /usr/local/bin/uxplay 에 설치되었습니다."
+echo "=== Done ==="
+echo "UxPlay has been installed to /usr/local/bin/uxplay."

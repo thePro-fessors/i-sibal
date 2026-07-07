@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# TUI를 위한 패키지 확인
+# Ensure dependencies for TUI
 if ! command -v whiptail &> /dev/null; then
     sudo apt-get install -y whiptail
 fi
@@ -9,47 +9,47 @@ if ! command -v iw &> /dev/null; then
     sudo apt-get install -y iw
 fi
 
-# TUI 기반 정보 입력
-AP_SSID=$(whiptail --inputbox "설정할 핫스팟의 SSID(이름)를 입력하세요:" 8 60 "i-Sibal-AP" 3>&1 1>&2 2>&3)
+# Get AP details via TUI
+AP_SSID=$(whiptail --inputbox "Enter the SSID (Name) for the Hotspot:" 8 60 "i-Sibal-AP" 3>&1 1>&2 2>&3)
 if [ -z "$AP_SSID" ]; then AP_SSID="i-Sibal-AP"; fi
 
-AP_PASS=$(whiptail --passwordbox "핫스팟의 비밀번호를 8자리 이상 입력하세요:" 8 60 "isibal1234" 3>&1 1>&2 2>&3)
+AP_PASS=$(whiptail --passwordbox "Enter the Hotspot password (at least 8 characters):" 8 60 "isibal1234" 3>&1 1>&2 2>&3)
 if [ -z "$AP_PASS" ]; then AP_PASS="isibal1234"; fi
 
-# 동적 무선 인터페이스 감지 (wlan0, wlan1 등)
+# Dynamically detect wireless interfaces
 IFACES=$(iw dev | awk '$1=="Interface"{print $2}')
 if [ -z "$IFACES" ]; then
-    whiptail --msgbox "무선 네트워크 인터페이스를 찾을 수 없습니다. 동글 장착 및 드라이버를 확인하세요." 8 60
+    whiptail --msgbox "No wireless interface found. Please check your USB dongle and drivers." 8 60
     exit 1
 fi
 
 IFACE_COUNT=$(echo "$IFACES" | wc -w)
 if [ "$IFACE_COUNT" -eq 1 ]; then
     WIFI_IFACE=$IFACES
-    whiptail --infobox "인터페이스 '$WIFI_IFACE'를 감지하여 자동으로 선택했습니다." 8 60
+    whiptail --infobox "Interface '$WIFI_IFACE' detected and selected automatically." 8 60
     sleep 2
 else
-    # 여러 개일 경우 (예: 내장 wlan0과 동글 wlan1) TUI로 선택
+    # Multiple interfaces found, prompt user
     RADIO_OPTIONS=""
     FIRST="ON"
     for i in $IFACES; do
         RADIO_OPTIONS="$RADIO_OPTIONS $i $i $FIRST "
         FIRST="OFF"
     done
-    WIFI_IFACE=$(whiptail --title "무선 인터페이스 선택" --radiolist "AP로 사용할 무선 인터페이스를 선택하세요:" 15 60 4 $RADIO_OPTIONS 3>&1 1>&2 2>&3)
+    WIFI_IFACE=$(whiptail --title "Select Wireless Interface" --radiolist "Select the interface to use for the AP:" 15 60 4 $RADIO_OPTIONS 3>&1 1>&2 2>&3)
 fi
 
 if [ -z "$WIFI_IFACE" ]; then
-    echo "취소되었습니다."
+    echo "Cancelled."
     exit 1
 fi
 
-# NetworkManager와 충돌 방지 (Bookworm 환경 등)
+# Prevent conflicts with NetworkManager (e.g., on Bookworm)
 if command -v nmcli &> /dev/null; then
     sudo nmcli dev set $WIFI_IFACE managed no || true
 fi
 
-# dhcpcd.conf 기존 설정 청소 및 삽입
+# Clean up and add dhcpcd.conf configuration
 sudo sed -i "/interface $WIFI_IFACE/,+3d" /etc/dhcpcd.conf 2>/dev/null || true
 sudo tee -a /etc/dhcpcd.conf > /dev/null <<EOF
 
@@ -58,7 +58,7 @@ interface $WIFI_IFACE
     nohook wpa_supplicant
 EOF
 
-# hostapd 구성
+# Configure hostapd
 sudo tee /etc/hostapd/hostapd.conf > /dev/null <<EOF
 interface=$WIFI_IFACE
 driver=nl80211
@@ -78,7 +78,7 @@ EOF
 
 sudo sed -i 's|^#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|g' /etc/default/hostapd
 
-# dnsmasq 구성
+# Configure dnsmasq
 sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig 2>/dev/null || true
 sudo tee /etc/dnsmasq.conf > /dev/null <<EOF
 interface=$WIFI_IFACE
@@ -90,4 +90,4 @@ EOF
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd dnsmasq
 
-whiptail --msgbox "AP 구성이 완료되었습니다!\nSSID: $AP_SSID\n인터페이스: $WIFI_IFACE\n시스템을 재부팅해야 적용됩니다." 10 60
+whiptail --msgbox "AP Configuration Completed!\nSSID: $AP_SSID\nInterface: $WIFI_IFACE\nPlease reboot the system to apply." 10 60
