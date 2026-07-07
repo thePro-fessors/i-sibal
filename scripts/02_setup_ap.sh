@@ -47,6 +47,10 @@ fi
 # Prevent conflicts with NetworkManager (e.g., on Bookworm)
 if command -v nmcli &> /dev/null; then
     sudo nmcli dev set $WIFI_IFACE managed no || true
+    # Make the unmanaged state persistent across reboots
+    sudo mkdir -p /etc/NetworkManager/conf.d
+    echo -e "[keyfile]\nunmanaged-devices=interface-name:$WIFI_IFACE" | sudo tee /etc/NetworkManager/conf.d/99-isibal-unmanaged.conf > /dev/null
+    sudo systemctl reload NetworkManager || true
 fi
 
 # Clean up and add dhcpcd.conf configuration

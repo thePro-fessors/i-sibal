@@ -38,13 +38,13 @@
    git clone https://github.com/your-username/i-Sibal.git
    cd i-Sibal
    ```
-3. **설치 스크립트 순차 실행**:
+3. **설치 스크립트 순차 실행 (인터넷 필요)**:
    ```bash
    ./scripts/01_install_deps.sh
-   # 2번 스크립트 실행 시 파란색 TUI 화면이 뜨며 SSID와 동글 인터페이스(wlan0, wlan1 등)를 편하게 고를 수 있습니다.
-   sudo ./scripts/02_setup_ap.sh
    ./scripts/03_install_uxplay.sh
    ./scripts/04_config_system.sh
+   # 가장 마지막에 2번을 실행하여 핫스팟 모드로 변환합니다. (TUI 화면 표시됨)
+   sudo ./scripts/02_setup_ap.sh
    ```
 4. **재부팅**: `sudo reboot`
 5. **사용**: 설정하신 AP Wi-Fi에 접속한 뒤, 모바일 기기의 AirPlay 미러링 메뉴에서 `i-Sibal`을 선택합니다.
