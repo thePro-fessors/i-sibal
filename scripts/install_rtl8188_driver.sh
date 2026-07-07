@@ -5,7 +5,9 @@ echo "=== Installing Realtek RTL8188FTV/FU Driver ==="
 
 echo ">> Installing kernel headers and DKMS..."
 sudo apt-get update
-sudo apt-get install -y build-essential dkms raspberrypi-kernel-headers git
+sudo apt-get install -y build-essential dkms git
+# Try installing headers dynamically matching uname -r, with fallbacks for RPi kernels
+sudo apt-get install -y linux-headers-$(uname -r) || sudo apt-get install -y linux-headers-rpi-v8 || sudo apt-get install -y raspberrypi-kernel-headers
 
 echo ">> Cloning driver repository..."
 cd "$HOME"
