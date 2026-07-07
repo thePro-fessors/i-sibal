@@ -1,0 +1,16 @@
+[Unit]
+Description=i-Sibal AirPlay Receiver (Low-Latency Mode)
+After=network-online.target avahi-daemon.service
+Wants=network-online.target avahi-daemon.service
+
+[Service]
+Type=simple
+User=pi
+Environment="GST_PLUGIN_FEATURE_RANK=v4l2slh264dec:MAX"
+# 저지연 모드: sync=false로 버퍼링 대기 없이 즉시 프레임을 화면에 뿌립니다.
+ExecStart=/usr/local/bin/uxplay -n "i-Sibal" -vs "kmssink sync=false" -as alsasink
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
