@@ -20,6 +20,14 @@ if command -v nmcli &> /dev/null; then
     sudo systemctl reload NetworkManager || true
 fi
 
+echo ">> Assigning static IP 192.168.4.1 to interface..."
+if [ -f /usr/local/bin/i-sibal-ip-up.sh ]; then
+    sudo /usr/local/bin/i-sibal-ip-up.sh || true
+else
+    # Fallback to local copy if not installed
+    sudo bash "$SCRIPT_DIR/i-sibal-ip-up.sh" || true
+fi
+
 echo ">> Starting AP (hostapd) and DHCP (dnsmasq) services..."
 sudo systemctl unmask hostapd || true
 sudo systemctl enable hostapd dnsmasq || true

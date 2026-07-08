@@ -91,6 +91,15 @@ domain=local
 address=/isibal.local/192.168.4.1
 EOF
 
+echo ">> Registering and enabling static IP helper service..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+sudo cp "$SCRIPT_DIR/i-sibal-ip-up.sh" /usr/local/bin/
+sudo chmod +x /usr/local/bin/i-sibal-ip-up.sh
+sudo cp "$PROJECT_DIR/config/i-sibal-ip.service" /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable i-sibal-ip.service
+
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd dnsmasq
 

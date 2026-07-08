@@ -1,0 +1,12 @@
+[Unit]
+Description=i-Sibal Static IP Setup
+Before=hostapd.service dnsmasq.service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/i-sibal-ip-up.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
