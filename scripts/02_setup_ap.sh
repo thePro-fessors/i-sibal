@@ -76,7 +76,7 @@ ignore_broadcast_ssid=0
 wpa=2
 wpa_passphrase=$AP_PASS
 wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
+wpa_pairwise=CCMP
 rsn_pairwise=CCMP
 EOF
 
