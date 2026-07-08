@@ -11,15 +11,20 @@ if ! command -v whiptail &> /dev/null; then
     apt-get install -y whiptail
 fi
 
+# Ensure scripts directory path is resolved relative to the script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 while true; do
-    CHOICE=$(whiptail --title "i-Sibal Management Menu" --menu "Select an option:" 20 60 8 \
+    CHOICE=$(whiptail --title "i-Sibal Management Menu" --menu "Select an option:" 20 65 10 \
         "1" "Switch Mode (Stable / Low-Latency)" \
-        "2" "Reconfigure AP (Hotspot)" \
-        "3" "Check Network Interfaces" \
-        "4" "Monitor UxPlay Logs (Real-time)" \
-        "5" "Restart Services" \
-        "6" "Reboot System" \
-        "7" "Exit" 3>&1 1>&2 2>&3)
+        "2" "Stop AP & Restore Wi-Fi (Release USB Dongle)" \
+        "3" "Start AP & Activate AirPlay" \
+        "4" "Reconfigure AP (Hotspot SSID/Password)" \
+        "5" "Check Network Interfaces" \
+        "6" "Monitor UxPlay Logs (Real-time)" \
+        "7" "Restart Services" \
+        "8" "Reboot System" \
+        "9" "Exit" 3>&1 1>&2 2>&3)
 
     case $CHOICE in
         1)
@@ -28,18 +33,28 @@ while true; do
                 "lowlat" "Low-Latency Mode (Prioritizes A/V Sync)" 3>&1 1>&2 2>&3)
             
             if [ -n "$MODE" ]; then
-                bash ./scripts/toggle_mode.sh $MODE
+                bash "$SCRIPT_DIR/scripts/toggle_mode.sh" $MODE
                 whiptail --msgbox "Mode has been changed and applied to '$MODE'." 8 60
             fi
             ;;
         2)
-            bash ./scripts/02_setup_ap.sh
+            whiptail --infobox "Releasing USB Dongle and restoring regular Wi-Fi client mode..." 8 60
+            bash "$SCRIPT_DIR/scripts/restore_wifi.sh"
+            whiptail --msgbox "AP stopped and USB Wi-Fi returned to NetworkManager.\nYou can now run 'nmtui' to connect to normal networks." 10 60
             ;;
         3)
+            whiptail --infobox "Starting AP and activating AirPlay services..." 8 60
+            bash "$SCRIPT_DIR/scripts/start_ap.sh"
+            whiptail --msgbox "AP Started and AirPlay services are now active!" 8 60
+            ;;
+        4)
+            bash "$SCRIPT_DIR/scripts/02_setup_ap.sh"
+            ;;
+        5)
             IFACES=$(ip -br a | grep -E "^wlan|^wl" || echo "No wireless interfaces found")
             whiptail --msgbox "Current Wireless Interface Status:\n\n$IFACES" 15 60
             ;;
-        4)
+        6)
             clear
             echo "======================================"
             echo " Press Ctrl+C to stop viewing logs."
@@ -49,17 +64,17 @@ while true; do
             echo "Press Enter to continue..."
             read
             ;;
-        5)
+        7)
             systemctl restart i-sibal-stable.service 2>/dev/null || true
             systemctl restart i-sibal-lowlat.service 2>/dev/null || true
             whiptail --msgbox "Active media services have been restarted." 8 60
             ;;
-        6)
+        8)
             if whiptail --yesno "Are you sure you want to reboot the system?" 8 60; then
                 reboot
             fi
             ;;
-        7)
+        9)
             exit 0
             ;;
         *)

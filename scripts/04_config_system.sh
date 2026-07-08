@@ -24,5 +24,15 @@ export GST_PLUGIN_FEATURE_RANK=v4l2slh264dec:MAX
 EOF
 sudo chmod +x /etc/profile.d/isibal_gst.sh
 
+echo ">> Registering systemd service files..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+sudo cp "$PROJECT_DIR"/config/i-sibal-*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+echo ">> Enabling default stable mode..."
+# Enable stable mode by default
+sudo "$PROJECT_DIR"/scripts/toggle_mode.sh stable
+
 echo "=== Done ==="
-echo "Video tuning completed. Changes will fully apply after reboot."
+echo "Video tuning and service registration completed. Changes will fully apply after reboot."
