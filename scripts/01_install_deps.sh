@@ -8,8 +8,8 @@ echo ">> Updating apt packages..."
 sudo apt-get update
 
 echo ">> Installing required packages..."
-# AP packages
-sudo apt-get install -y hostapd dnsmasq iw whiptail
+# AP 관련 패키지
+sudo apt-get install -y hostapd dnsmasq iw whiptail iptables
 
 # mDNS packages
 sudo apt-get install -y avahi-daemon

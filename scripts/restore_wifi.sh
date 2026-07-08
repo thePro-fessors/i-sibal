@@ -17,6 +17,12 @@ if [ -n "$WIFI_IFACE" ]; then
     if command -v nmcli &> /dev/null; then
         sudo nmcli dev set $WIFI_IFACE managed yes || true
     fi
+    # Clear NAT rules and disable forwarding
+    echo ">> Deactivating NAT and cleaning up iptables..."
+    sudo iptables -t nat -F 2>/dev/null || true
+    sudo iptables -F 2>/dev/null || true
+    sudo sysctl -w net.ipv4.ip_forward=0 > /dev/null || true
+    
     sudo systemctl reload NetworkManager || true
 fi
 

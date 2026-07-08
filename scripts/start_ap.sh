@@ -28,6 +28,25 @@ else
     sudo bash "$SCRIPT_DIR/i-sibal-ip-up.sh" || true
 fi
 
+# Enable IP Forwarding
+sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null
+
+# Dynamic WAN interface detection (Ethernet, USB, etc.)
+WAN_IFACE=$(ip route show | grep default | awk '{print $5}' | head -n 1)
+
+if [ -n "$WAN_IFACE" ] && [ "$WAN_IFACE" != "$WIFI_IFACE" ]; then
+    echo ">> Internet connection detected on interface: $WAN_IFACE"
+    echo ">> Activating NAT (Internet Sharing) from $WIFI_IFACE to $WAN_IFACE..."
+    # Flush existing POSTROUTING rules to prevent duplicates
+    sudo iptables -t nat -F POSTROUTING 2>/dev/null || true
+    # Set up NAT masquerading
+    sudo iptables -t nat -A POSTROUTING -o "$WAN_IFACE" -j MASQUERADE
+    sudo iptables -A FORWARD -i "$WAN_IFACE" -o "$WIFI_IFACE" -m state --state RELATED,ESTABLISHED -j ACCEPT
+    sudo iptables -A FORWARD -i "$WIFI_IFACE" -o "$WAN_IFACE" -j ACCEPT
+else
+    echo ">> No active wired/uplink internet connection detected. Running in offline AP mode."
+fi
+
 echo ">> Starting AP (hostapd) and DHCP (dnsmasq) services..."
 sudo systemctl unmask hostapd || true
 sudo systemctl enable hostapd dnsmasq || true
